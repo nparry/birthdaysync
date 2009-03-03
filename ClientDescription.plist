@@ -1,0 +1,23 @@
+{
+	DisplayName = BirthdaySync;
+	ImagePath = "BirthdaySync.icns";
+	Entities = {
+		"com.apple.contacts.Contact" = (
+			"com.apple.syncservices.RecordEntityName",
+			"first name",
+			"last name",
+			birthday,
+		);
+	};
+	PullOnlyEntities = (
+		"com.apple.contacts.Contact",
+	);
+	SyncsWith = {
+		SyncAlertToolPath = "../MacOS/BirthdaySync";
+		SyncAlertTypes = (
+			app,
+			server,
+			device,
+		);
+	};
+}
