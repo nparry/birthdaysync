@@ -1,0 +1,3 @@
+[submodule "external/gdata"]
+	path = external/gdata
+	url = git@github.com:nparry/gdata-objectivec-client.git

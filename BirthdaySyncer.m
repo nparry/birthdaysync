@@ -1,14 +1,20 @@
 #import "BirthdaySyncer.h"
 #import "BirthdaySyncConstants.h"
+#import "PasswordStorage.h"
 
 @interface BirthdaySyncer (Private)
 -(void)runSync;
 -(void)runSyncWithCallback:(id)data;
+-(void)setupCalendarData;
+-(NSString*)targetCalendarName;
+-(GDataEntryCalendar*)getTargetCalendar;
+-(GDataEntryCalendar*)createTargetCalendar;
+-(id)waitForTicket:(GDataServiceTicketBase*)ticket;
 @end
 
 @interface SyncerCallback : NSObject {
-	id callbackObject;
-	SEL callbackSelector;
+	id callbackObject_;
+	SEL callbackSelector_;
 }
 -(id)initWithObject:(id)ojbect selector:(SEL)selector;
 -(void)invoke:(BirthdaySyncer*)bs;
@@ -17,14 +23,14 @@
 @implementation SyncerCallback
 -(id)initWithObject:(id)object selector:(SEL)selector {
 	if (self = [super init]) {
-		callbackObject = object;
-		callbackSelector = selector;
+		callbackObject_ = object;
+		callbackSelector_ = selector;
 	}
 	return self;
 }
 
 -(void)invoke:(BirthdaySyncer*)bs {
-	[callbackObject performSelector:callbackSelector withObject:bs];
+	[callbackObject_ performSelector:callbackSelector_ withObject:bs];
 }
 @end
 
@@ -54,9 +60,19 @@
 
 -(id)init {
 	if (self = [super init]) {
-		queue = [[NSOperationQueue alloc] init];
-		clientId = 0;
-		entityNames = 0;
+		queue_ = [[NSOperationQueue alloc] init];
+		clientId_ = NULL;
+		entityNames_ = NULL;
+		
+		NSString *username = [[NSUserDefaults standardUserDefaults] stringForKey:@"googleUsername"];
+		NSString *password = getBirthdaySyncPassword();
+
+		calendarService_ = [[GDataServiceGoogleCalendar alloc] init];
+		[calendarService_ setUserAgent:kBirthdaySyncUserAgent];
+		[calendarService_ setShouldCacheDatedData:YES];
+		[calendarService_ setServiceShouldFollowNextLinks:YES];
+		[calendarService_ setUserCredentialsWithUsername:username
+												password:password];
 	}
 	return self;
 }
@@ -64,20 +80,23 @@
 -(id)initWithClient:(NSString*)client
 		   entityNames:(NSArray*)entities {
 	if (self = [super init]) {
-		clientId = [client retain];
-		entityNames = [entities retain];
+		clientId_ = [client retain];
+		entityNames_ = [entities retain];
 	}
 	return self;
 }
 
 -(void)dealloc {
-	[queue release];
-	[clientId release];
-	[entityNames release];
+	[queue_ release];
+	[clientId_ release];
+	[entityNames_ release];
+	[calendarService_ release];
+	[targetCalendar_ release];
 	[super dealloc];
 }
 
 - (void) runSynchronousSync {
+	//[self setupCalendarData];
 	NSOperationQueue *q = [[NSOperationQueue alloc] init];
 	NSInvocationOperation* op = [[NSInvocationOperation alloc] initWithTarget:self
 																	 selector:@selector(runSync)
@@ -94,17 +113,18 @@
 
 - (void) runAsynchronousSyncAndCall:(id)object
 						   selector:(SEL)sel {
+	//[self setupCalendarData];
 	SyncerCallback *cb = [[SyncerCallback alloc] initWithObject:object selector:sel];
 	NSInvocationOperation* op = [[NSInvocationOperation alloc] initWithTarget:self
 																	 selector:@selector(runSyncWithCallback:)
 																	   object:cb];
-    [queue addOperation:op];
+    [queue_ addOperation:op];
 	[op release];
 	[cb release];
 }
 
 - (NSString *)clientIdentifier {
-	return clientId? clientId : kSyncServicesClientId;
+	return clientId_? clientId_ : kSyncServicesClientId;
 }
 
 - (NSURL *)clientDescriptionURL {
@@ -121,6 +141,13 @@
 }
 
 - (NSDictionary *)recordsForEntityName:(NSString *)entity
+								   moreComing:(BOOL *)moreComing
+										error:(NSError **)outError {
+	*moreComing = NO;
+	return [NSDictionary dictionary];
+}
+
+- (NSDictionary *)changedRecordsForEntityName:(NSString *)entity
 							moreComing:(BOOL *)moreComing
 								 error:(NSError **)outError {
 	*moreComing = NO;
@@ -151,8 +178,86 @@
 }
 
 -(void)runSync {
-	ISyncSessionDriver *syncDriver = [ISyncSessionDriver sessionDriverWithDataSource:self];
-	BOOL success = [syncDriver sync];
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	
+	@try {
+		[self setupCalendarData];
+		ISyncSessionDriver *syncDriver = [ISyncSessionDriver sessionDriverWithDataSource:self];
+		[syncDriver sync];
+	} @catch (NSException *error) {
+		NSLog(@"Error during sync: %@", [error reason]);
+	}
+	
+	[pool release];
+}
+
+-(void)setupCalendarData {
+	targetCalendar_ = [self getTargetCalendar];
+	if (!targetCalendar_) {
+		targetCalendar_ = [self createTargetCalendar];
+	}
+	[targetCalendar_ retain];	
+}
+
+-(NSString*)targetCalendarName {
+	return  [[NSUserDefaults standardUserDefaults] stringForKey:@"googleCalendar"];
+}
+
+-(GDataEntryCalendar*)getTargetCalendar {
+	NSString *targetName = [self targetCalendarName];
+	
+	GDataServiceTicket *ticket =
+		[calendarService_ fetchCalendarFeedWithURL:[NSURL URLWithString:kGDataGoogleCalendarDefaultOwnCalendarsFeed]
+										  delegate:self
+								 didFinishSelector:NULL
+								   didFailSelector:NULL];
+	
+	GDataFeedCalendar *feed = [self waitForTicket:ticket];
+	NSEnumerator *enumerator = [[feed entries] objectEnumerator];
+	GDataEntryCalendar *calendar;
+	while (calendar = [enumerator nextObject]) {
+		if ([targetName isEqualToString:[[calendar title] stringValue]]) {
+			return calendar;
+		}
+	}
+	
+	return NULL;
+}
+	
+-(GDataEntryCalendar*)createTargetCalendar {			
+	GDataEntryCalendar *newEntry = [GDataEntryCalendar calendarEntry];
+	[newEntry setTitleWithString:[self targetCalendarName]];
+	[newEntry setIsSelected:YES]; // check the calendar in the web display
+	
+	// as of Dec. '07 the server requires a color, 
+	// or returns a 404 (Not Found) error
+	[newEntry setColor:[GDataColorProperty valueWithString:@"#2952A3"]];
+	
+	GDataServiceTicket *ticket =
+		[calendarService_ fetchCalendarEntryByInsertingEntry:newEntry
+												  forFeedURL:[NSURL URLWithString:kGDataGoogleCalendarDefaultOwnCalendarsFeed] 
+													delegate:self
+										   didFinishSelector:NULL
+											 didFailSelector:NULL];
+	
+	GDataEntryCalendar *calendar = [self waitForTicket:ticket];
+	return calendar;
+}
+
+-(id)waitForTicket:(GDataServiceTicketBase*)ticket {
+	NSError *error = NULL;
+	id result = NULL;
+	
+	BOOL success = [calendarService_ waitForTicket:ticket
+										   timeout:60
+									 fetchedObject:&result
+											 error:&error];
+	
+	if (success) {
+		return result;
+	}
+	
+	@throw error;
 }
 
 @end

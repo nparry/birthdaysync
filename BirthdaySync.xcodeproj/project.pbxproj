@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
+		454E2E0C0F6DC72B009098E3 /* GData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 454E2E070F6DC71A009098E3 /* GData.framework */; };
+		454E2F050F6DE5B5009098E3 /* GData.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 454E2E070F6DC71A009098E3 /* GData.framework */; };
 		45FC24620F5AE792009B70E3 /* AppController.m in Sources */ = {isa = PBXBuildFile; fileRef = 45FC24610F5AE792009B70E3 /* AppController.m */; };
 		45FE574C0F5B16E900CC771D /* PasswordStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 45FE574B0F5B16E900CC771D /* PasswordStorage.m */; };
 		45FE57680F5B26B400CC771D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45FE57670F5B26B400CC771D /* Security.framework */; };
@@ -20,6 +22,50 @@
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		454E2E060F6DC71A009098E3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 454E2DFC0F6DC719009098E3 /* GData.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4F38F6A60B66E91D00B24B81;
+			remoteInfo = GDataFramework;
+		};
+		454E2E080F6DC71A009098E3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 454E2DFC0F6DC719009098E3 /* GData.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4F14A9DD0B1276B70072EBB8;
+			remoteInfo = GDataUnitTests;
+		};
+		454E2E0A0F6DC71A009098E3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 454E2DFC0F6DC719009098E3 /* GData.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4F1AD9020B71603F00DC0485;
+			remoteInfo = DevelopmentTestTool;
+		};
+		454E2E0D0F6DC737009098E3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 454E2DFC0F6DC719009098E3 /* GData.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4F38F6A50B66E91D00B24B81;
+			remoteInfo = GDataFramework;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		454E2F090F6DE5BE009098E3 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				454E2F050F6DE5B5009098E3 /* GData.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
@@ -29,6 +75,7 @@
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* BirthdaySync_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BirthdaySync_Prefix.pch; sourceTree = "<group>"; };
+		454E2DFC0F6DC719009098E3 /* GData.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GData.xcodeproj; path = external/gdata/Source/GData.xcodeproj; sourceTree = "<group>"; };
 		45FC24600F5AE792009B70E3 /* AppController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppController.h; sourceTree = "<group>"; };
 		45FC24610F5AE792009B70E3 /* AppController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppController.m; sourceTree = "<group>"; };
 		45FE574A0F5B16E900CC771D /* PasswordStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PasswordStorage.h; sourceTree = "<group>"; };
@@ -49,6 +96,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				454E2E0C0F6DC72B009098E3 /* GData.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				45FE57680F5B26B400CC771D /* Security.framework in Frameworks */,
 				45FE5A750F5B8C1B00CC771D /* SyncServices.framework in Frameworks */,
@@ -102,6 +150,7 @@
 		29B97314FDCFA39411CA2CEA /* BirthdaySync */ = {
 			isa = PBXGroup;
 			children = (
+				454E2DFC0F6DC719009098E3 /* GData.xcodeproj */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
@@ -142,6 +191,16 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		454E2DFD0F6DC719009098E3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				454E2E070F6DC71A009098E3 /* GData.framework */,
+				454E2E090F6DC71A009098E3 /* GDataUnitTests.octest */,
+				454E2E0B0F6DC71A009098E3 /* DevelopmentTestTool */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -152,10 +211,12 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
+				454E2F090F6DE5BE009098E3 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				454E2E0E0F6DC737009098E3 /* PBXTargetDependency */,
 			);
 			name = BirthdaySync;
 			productInstallPath = "$(HOME)/Applications";
@@ -173,12 +234,42 @@
 			hasScannedForEncodings = 1;
 			mainGroup = 29B97314FDCFA39411CA2CEA /* BirthdaySync */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 454E2DFD0F6DC719009098E3 /* Products */;
+					ProjectRef = 454E2DFC0F6DC719009098E3 /* GData.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* BirthdaySync */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		454E2E070F6DC71A009098E3 /* GData.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = GData.framework;
+			remoteRef = 454E2E060F6DC71A009098E3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		454E2E090F6DC71A009098E3 /* GDataUnitTests.octest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = GDataUnitTests.octest;
+			remoteRef = 454E2E080F6DC71A009098E3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		454E2E0B0F6DC71A009098E3 /* DevelopmentTestTool */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = DevelopmentTestTool;
+			remoteRef = 454E2E0A0F6DC71A009098E3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		8D1107290486CEB800E47090 /* Resources */ = {
@@ -207,6 +298,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		454E2E0E0F6DC737009098E3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = GDataFramework;
+			targetProxy = 454E2E0D0F6DC737009098E3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		089C165CFE840E0CC02AAC07 /* InfoPlist.strings */ = {
@@ -263,10 +362,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				FRAMEWORK_SEARCH_PATHS = "${SRCROOT}/external/gdata/Source/build/${CONFIGURATION}";
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "${SRCROOT}/external/gdata/Source/build/${CONFIGURATION}/GData.framework/Headers";
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;
@@ -277,9 +378,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				FRAMEWORK_SEARCH_PATHS = "${SRCROOT}/external/gdata/Source/build/${CONFIGURATION}";
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "${SRCROOT}/external/gdata/Source/build/${CONFIGURATION}/GData.framework/Headers";
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;
 			};
