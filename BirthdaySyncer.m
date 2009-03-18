@@ -9,6 +9,7 @@
 -(NSString*)targetCalendarName;
 -(GDataEntryCalendar*)getTargetCalendar;
 -(GDataEntryCalendar*)createTargetCalendar;
+-(void)deleteTargetCalendar;
 -(id)waitForTicket:(GDataServiceTicketBase*)ticket;
 @end
 
@@ -164,7 +165,16 @@
 
 - (BOOL)deleteAllRecordsForEntityName:(NSString *)entityName
 								error:(NSError **)outError {
-	return YES;
+	BOOL success = YES;
+	@try {
+		[self deleteTargetCalendar];
+		[targetCalendar_ release];
+		targetCalendar_ = [[self createTargetCalendar] retain];
+	} @catch (NSException *e) {
+		success =  NO;
+	}
+	
+	return success;
 }
 
 @end
@@ -208,7 +218,7 @@
 	
 	GDataServiceTicket *ticket =
 		[calendarService_ fetchCalendarFeedWithURL:[NSURL URLWithString:kGDataGoogleCalendarDefaultOwnCalendarsFeed]
-										  delegate:self
+										  delegate:NULL
 								 didFinishSelector:NULL
 								   didFailSelector:NULL];
 	
@@ -236,12 +246,21 @@
 	GDataServiceTicket *ticket =
 		[calendarService_ fetchCalendarEntryByInsertingEntry:newEntry
 												  forFeedURL:[NSURL URLWithString:kGDataGoogleCalendarDefaultOwnCalendarsFeed] 
-													delegate:self
+													delegate:NULL
 										   didFinishSelector:NULL
 											 didFailSelector:NULL];
 	
 	GDataEntryCalendar *calendar = [self waitForTicket:ticket];
 	return calendar;
+}
+
+-(void)deleteTargetCalendar {
+	GDataServiceTicket *ticket = 
+	[calendarService_ deleteCalendarEntry:targetCalendar_
+								 delegate:NULL
+						didFinishSelector:NULL
+						  didFailSelector:NULL];
+	[self waitForTicket:ticket];
 }
 
 -(id)waitForTicket:(GDataServiceTicketBase*)ticket {
