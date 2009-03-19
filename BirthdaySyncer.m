@@ -61,6 +61,7 @@
 
 -(id)init {
 	if (self = [super init]) {
+		//[GDataHTTPFetcher setIsLoggingEnabled:YES];
 		queue_ = [[NSOperationQueue alloc] init];
 		clientId_ = NULL;
 		entityNames_ = NULL;
@@ -72,6 +73,7 @@
 		[calendarService_ setUserAgent:kBirthdaySyncUserAgent];
 		[calendarService_ setShouldCacheDatedData:YES];
 		[calendarService_ setServiceShouldFollowNextLinks:YES];
+		//[calendarService_ setShouldUseMethodOverrideHeader:YES];
 		[calendarService_ setUserCredentialsWithUsername:username
 												password:password];
 	}
@@ -97,7 +99,6 @@
 }
 
 - (void) runSynchronousSync {
-	//[self setupCalendarData];
 	NSOperationQueue *q = [[NSOperationQueue alloc] init];
 	NSInvocationOperation* op = [[NSInvocationOperation alloc] initWithTarget:self
 																	 selector:@selector(runSync)
@@ -114,7 +115,6 @@
 
 - (void) runAsynchronousSyncAndCall:(id)object
 						   selector:(SEL)sel {
-	//[self setupCalendarData];
 	SyncerCallback *cb = [[SyncerCallback alloc] initWithObject:object selector:sel];
 	NSInvocationOperation* op = [[NSInvocationOperation alloc] initWithTarget:self
 																	 selector:@selector(runSyncWithCallback:)
@@ -170,7 +170,8 @@
 		[self deleteTargetCalendar];
 		[targetCalendar_ release];
 		targetCalendar_ = [[self createTargetCalendar] retain];
-	} @catch (NSException *e) {
+	} @catch (NSException *error) {
+		NSLog(@"Error during deleteAllRecordsForEntityName: %@", [error reason]);
 		success =  NO;
 	}
 	
@@ -255,6 +256,8 @@
 }
 
 -(void)deleteTargetCalendar {
+	[calendarService_ setShouldUseMethodOverrideHeader:YES];
+
 	GDataServiceTicket *ticket = 
 	[calendarService_ deleteCalendarEntry:targetCalendar_
 								 delegate:NULL
@@ -268,10 +271,12 @@
 	id result = NULL;
 	
 	BOOL success = [calendarService_ waitForTicket:ticket
-										   timeout:60
+										   timeout:30
 									 fetchedObject:&result
 											 error:&error];
 	
+	[calendarService_ setShouldUseMethodOverrideHeader:NO];
+
 	if (success) {
 		return result;
 	}
