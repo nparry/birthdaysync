@@ -8,6 +8,7 @@
 	NSArray *entityNames_;
 	GDataServiceGoogleCalendar *calendarService_;
 	GDataEntryCalendar *targetCalendar_;
+	NSMutableDictionary *events_;
 }
 
 + (void) registerWithSyncServices;

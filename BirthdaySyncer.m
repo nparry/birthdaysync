@@ -9,7 +9,11 @@
 -(NSString*)targetCalendarName;
 -(GDataEntryCalendar*)getTargetCalendar;
 -(GDataEntryCalendar*)createTargetCalendar;
--(void)deleteTargetCalendar;
+-(void)deleteTargetCalendar:(GDataEntryCalendar*)calendar;
+-(void)getCalendarEvents:(NSMutableDictionary*)eventSink;
+-(GDataEntryCalendarEvent*)createEventForRecord:(NSDictionary*)record;
+-(GDataEntryCalendarEvent*)modifyEvent:(GDataEntryCalendarEvent*)event withRecord:(NSDictionary*)record;
+-(BOOL)deleteEvent:(GDataEntryCalendarEvent*)event;
 -(id)waitForTicket:(GDataServiceTicketBase*)ticket;
 @end
 
@@ -76,6 +80,9 @@
 		//[calendarService_ setShouldUseMethodOverrideHeader:YES];
 		[calendarService_ setUserCredentialsWithUsername:username
 												password:password];
+		
+		targetCalendar_ = NULL;
+		events_ = [[NSMutableDictionary dictionaryWithCapacity:50] retain];
 	}
 	return self;
 }
@@ -95,6 +102,7 @@
 	[entityNames_ release];
 	[calendarService_ release];
 	[targetCalendar_ release];
+	[events_ release];
 	[super dealloc];
 }
 
@@ -160,14 +168,49 @@
 					 remappedRecordIdentifier:(NSString **)outRecordIdentifier
 							  formattedRecord:(NSDictionary **)outRecord
 										error:(NSError **)outError {
-	return ISyncSessionDriverChangeAccepted;
+	
+	ISyncSessionDriverChangeResult result = ISyncSessionDriverChangeIgnored;
+	
+	switch ([change type]) {
+		case ISyncChangeTypeAdd: {
+			GDataEntryCalendarEvent *event = [self createEventForRecord:[change record]];
+			if (event) {
+				[events_ setObject:event forKey:[event identifier]];
+				*outRecordIdentifier = [event identifier];
+				result = ISyncSessionDriverChangeAccepted;
+			}
+		} break;
+		case ISyncChangeTypeModify: {
+			GDataEntryCalendarEvent *event = [events_ objectForKey:[change recordIdentifier]];
+			if (event) {
+				GDataEntryCalendarEvent *newEvent = [self modifyEvent:event withRecord:[change record]];
+				if (newEvent) {
+					[events_ setObject:newEvent forKey:[newEvent identifier]];
+					*outRecordIdentifier = [newEvent identifier];
+					result = ISyncSessionDriverChangeAccepted;;
+				}
+			}
+		} break;
+		case ISyncChangeTypeDelete: {
+			GDataEntryCalendarEvent *event = [events_ objectForKey:[change recordIdentifier]];
+			if (event) {
+				BOOL ok = [self deleteEvent:event];
+				if (ok) {
+					[events_ removeObjectForKey:[change recordIdentifier]];
+					result = ISyncSessionDriverChangeAccepted;
+				}
+			}
+		} break;
+	}
+	
+	return result;
 }
 
 - (BOOL)deleteAllRecordsForEntityName:(NSString *)entityName
 								error:(NSError **)outError {
 	BOOL success = YES;
 	@try {
-		[self deleteTargetCalendar];
+		[self deleteTargetCalendar:targetCalendar_];
 		[targetCalendar_ release];
 		targetCalendar_ = [[self createTargetCalendar] retain];
 	} @catch (NSException *error) {
@@ -207,7 +250,8 @@
 	if (!targetCalendar_) {
 		targetCalendar_ = [self createTargetCalendar];
 	}
-	[targetCalendar_ retain];	
+	[targetCalendar_ retain];
+	[self getCalendarEvents:events_];
 }
 
 -(NSString*)targetCalendarName {
@@ -255,15 +299,43 @@
 	return calendar;
 }
 
--(void)deleteTargetCalendar {
+-(void)deleteTargetCalendar:(GDataEntryCalendar*)calendar {
 	[calendarService_ setShouldUseMethodOverrideHeader:YES];
 
 	GDataServiceTicket *ticket = 
-	[calendarService_ deleteCalendarEntry:targetCalendar_
+	[calendarService_ deleteCalendarEntry:calendar
 								 delegate:NULL
 						didFinishSelector:NULL
 						  didFailSelector:NULL];
 	[self waitForTicket:ticket];
+}
+
+
+-(void)getCalendarEvents:(NSMutableDictionary*)eventSink {
+	GDataServiceTicket *ticket =
+	[calendarService_ fetchCalendarEventFeedWithURL:[[targetCalendar_ alternateLink] URL]
+										   delegate:NULL
+								  didFinishSelector:NULL
+									didFailSelector:NULL];
+	GDataFeedCalendarEvent *events = [self waitForTicket:ticket];
+	NSEnumerator *enumerator = [[events entries] objectEnumerator];
+	GDataEntryCalendarEvent *event;
+	while ((event = [enumerator nextObject])) {
+		[eventSink setObject:event forKey:[event identifier]];
+	}
+}
+
+-(GDataEntryCalendarEvent*)createEventForRecord:(NSDictionary*)record {
+	
+}
+
+-(GDataEntryCalendarEvent*)modifyEvent:(GDataEntryCalendarEvent*)event
+							withRecord:(NSDictionary*)record {
+	
+}
+
+-(BOOL)deleteEvent:(GDataEntryCalendarEvent*)event {
+
 }
 
 -(id)waitForTicket:(GDataServiceTicketBase*)ticket {
