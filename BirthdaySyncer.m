@@ -37,6 +37,7 @@
 }
 
 -(void)invoke:(BirthdaySyncer*)bs {
+	NSLog(@"BirthdaySync callback firing");
 	[callbackObject_ performSelector:callbackSelector_ withObject:bs];
 }
 @end
@@ -66,6 +67,7 @@
 }
 
 -(id)init {
+	NSLog(@"BirthdaySync init");
 	if (self = [super init]) {
 		//[GDataHTTPFetcher setIsLoggingEnabled:YES];
 		queue_ = [[NSOperationQueue alloc] init];
@@ -74,6 +76,7 @@
 		
 		NSString *username = [[NSUserDefaults standardUserDefaults] stringForKey:@"googleUsername"];
 		NSString *password = getBirthdaySyncPassword();
+		NSLog(@"User info: %@, %@", username, password);
 
 		calendarService_ = [[GDataServiceGoogleCalendar alloc] init];
 		[calendarService_ setUserAgent:kBirthdaySyncUserAgent];
@@ -86,12 +89,13 @@
 		targetCalendar_ = NULL;
 		events_ = [[NSMutableDictionary dictionaryWithCapacity:50] retain];
 	}
+	NSLog(@"BirthdaySync init complete");
 	return self;
 }
 
 -(id)initWithClient:(NSString*)client
 		   entityNames:(NSArray*)entities {
-	if (self = [super init]) {
+	if (self = [self init]) {
 		clientId_ = [client retain];
 		entityNames_ = [entities retain];
 	}
@@ -109,6 +113,7 @@
 }
 
 - (void) runSynchronousSync {
+	NSLog(@"BirthdaySync running synchronous sync");
 	NSOperationQueue *q = [[NSOperationQueue alloc] init];
 	NSInvocationOperation* op = [[NSInvocationOperation alloc] initWithTarget:self
 																	 selector:@selector(runSync)
@@ -125,6 +130,7 @@
 
 - (void) runAsynchronousSyncAndCall:(id)object
 						   selector:(SEL)sel {
+	NSLog(@"BirthdaySync running asynchronous sync");
 	SyncerCallback *cb = [[SyncerCallback alloc] initWithObject:object selector:sel];
 	NSInvocationOperation* op = [[NSInvocationOperation alloc] initWithTarget:self
 																	 selector:@selector(runSyncWithCallback:)
@@ -175,6 +181,7 @@
 	@try {
 		switch ([change type]) {
 			case ISyncChangeTypeAdd: {
+				NSLog(@"Adding record");
 				GDataEntryCalendarEvent *event = [self createEventForRecord:[change record]];
 				if (event) {
 					[events_ setObject:event forKey:[event identifier]];
@@ -183,6 +190,7 @@
 				}
 			} break;
 			case ISyncChangeTypeModify: {
+				NSLog(@"Updating record");
 				GDataEntryCalendarEvent *event = [events_ objectForKey:[change recordIdentifier]];
 				if (event) {
 					GDataEntryCalendarEvent *newEvent = [self modifyEvent:event withRecord:[change record]];
@@ -194,6 +202,7 @@
 				}
 			} break;
 			case ISyncChangeTypeDelete: {
+				NSLog(@"Deleting record");
 				GDataEntryCalendarEvent *event = [events_ objectForKey:[change recordIdentifier]];
 				if (event) {
 					BOOL ok = [self deleteEvent:event];
@@ -237,10 +246,14 @@
 }
 
 -(void)runSync {
+	NSLog(@"BirthdaySync runSync invoked");
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	
 	@try {
+		NSLog(@"Setting up initial calendar data");
 		[self setupCalendarData];
+		
+		NSLog(@"Starting sync session driver");
 		ISyncSessionDriver *syncDriver = [ISyncSessionDriver sessionDriverWithDataSource:self];
 		[syncDriver sync];
 	} @catch (NSException *error) {
@@ -251,11 +264,15 @@
 }
 
 -(void)setupCalendarData {
+	NSLog(@"Looking for existing calendar");
 	targetCalendar_ = [self getTargetCalendar];
 	if (!targetCalendar_) {
+		NSLog(@"No existing calendar, creating new calendar");
 		targetCalendar_ = [self createTargetCalendar];
 	}
 	[targetCalendar_ retain];
+	
+	NSLog(@"Fetching existing calendar events");
 	[self getCalendarEvents:events_];
 }
 
@@ -386,6 +403,13 @@
 	GDataRecurrence * r;
 	
 	if (birthday) {
+		NSString *descriptionFormat = @"%Y-%m-%d";
+		NSString *description = [NSString stringWithFormat:@"Birthday: %@",
+			[birthday descriptionWithCalendarFormat:descriptionFormat
+										   timeZone:NULL
+											 locale:NULL]];
+		[event setSummaryWithString:description];
+		
 		NSDate *nextDay = [birthday addTimeInterval:(24*60*60)];
 		NSString *dateFormat = @"%Y%m%d";
 		NSString *start = [birthday descriptionWithCalendarFormat:dateFormat
@@ -422,6 +446,7 @@
 }
 
 -(id)waitForTicket:(GDataServiceTicketBase*)ticket {
+	NSLog(@"Waiting for ticket to complete");
 	NSError *error = NULL;
 	id result = NULL;
 	
@@ -433,10 +458,16 @@
 	[calendarService_ setShouldUseMethodOverrideHeader:NO];
 
 	if (success) {
+		NSLog(@"Ticket completed successfully");
 		return result;
 	}
 	
-	@throw error;
+	NSException *e = [NSException exceptionWithName:@"GDataTicketError"
+											 reason:[error localizedDescription]
+										   userInfo:NULL];
+	
+	NSLog(@"Ticket failed with error %@", [e reason]);
+	@throw e;
 }
 
 @end
