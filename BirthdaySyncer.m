@@ -76,13 +76,12 @@
 		
 		NSString *username = [[NSUserDefaults standardUserDefaults] stringForKey:@"googleUsername"];
 		NSString *password = getBirthdaySyncPassword();
-		NSLog(@"User info: %@, %@", username, password);
+		//NSLog(@"User info: %@, %@", username, password);
 
 		calendarService_ = [[GDataServiceGoogleCalendar alloc] init];
 		[calendarService_ setUserAgent:kBirthdaySyncUserAgent];
 		[calendarService_ setShouldCacheDatedData:YES];
 		[calendarService_ setServiceShouldFollowNextLinks:YES];
-		//[calendarService_ setShouldUseMethodOverrideHeader:YES];
 		[calendarService_ setUserCredentialsWithUsername:username
 												password:password];
 		
@@ -368,6 +367,8 @@
 	[self setNameOnEvent:event fromRecord:record];
 	[self setDateOnEvent:event fromRecord:record];
 	
+	[calendarService_ setShouldUseMethodOverrideHeader:YES];
+	
 	GDataServiceTicket *ticket =
 		[calendarService_ fetchCalendarEventEntryByUpdatingEntry:event
 													 forEntryURL:[[event editLink] URL]
@@ -408,7 +409,7 @@
 			[birthday descriptionWithCalendarFormat:descriptionFormat
 										   timeZone:NULL
 											 locale:NULL]];
-		[event setSummaryWithString:description];
+		[event setContentWithString:description];
 		
 		NSDate *nextDay = [birthday addTimeInterval:(24*60*60)];
 		NSString *dateFormat = @"%Y%m%d";
